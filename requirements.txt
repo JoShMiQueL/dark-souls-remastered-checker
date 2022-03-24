@@ -1,0 +1,2 @@
+git+https://github.com/TomMars/ReadWriteMemory@patch-1#ReadWriteMemory
+autopep8==1.6.0
