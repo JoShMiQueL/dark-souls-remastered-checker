@@ -42,6 +42,8 @@ class DarkSoulsRemastered:
   r_weapon_2: int = 0
   l_weapon_1: int = 0
   l_weapon_2: int = 0
+  current_hp: int = 0
+  max_hp: int = 0
 
   def __init__(self):
     self.attach()
@@ -617,6 +619,24 @@ class DarkSoulsRemastered:
         self.base + offsets["l_weapon_2"][0], offsets["l_weapon_2"][1])
     l_weapon_2 = self.process.read(l_weapon_2_pointer)
     return l_weapon_2
+  
+  def get_current_hp(self) -> int:
+    """
+    Get the current hp
+    """
+    current_hp_pointer = self.process.get_pointer(
+        self.base + offsets["current_hp"][0], offsets["current_hp"][1])
+    current_hp = self.process.read(current_hp_pointer)
+    return current_hp
+  
+  def get_max_hp(self) -> int:
+    """
+    Get the max hp
+    """
+    max_hp_pointer = self.process.get_pointer(
+        self.base + offsets["max_hp"][0], offsets["max_hp"][1])
+    max_hp = self.process.read(max_hp_pointer)
+    return max_hp
   # endregion
 
   def read_memory(self):
@@ -647,6 +667,8 @@ class DarkSoulsRemastered:
       self.r_weapon_2 = self.get_r_weapon_2()
       self.l_weapon_1 = self.get_l_weapon_1()
       self.l_weapon_2 = self.get_l_weapon_2()
+      self.current_hp = self.get_current_hp()
+      self.max_hp = self.get_max_hp()
 
   def print_memory(self):
     print(f"--- Game Attached: {self.game_attached} ---")
@@ -676,6 +698,8 @@ class DarkSoulsRemastered:
         print(f"Right Weapon 2: {self.r_weapon_2}")
         print(f"Left Weapon 1: {self.l_weapon_1}")
         print(f"Left Weapon 2: {self.l_weapon_2}")
+        print(f"Current HP: {self.current_hp}")
+        print(f"Max HP: {self.max_hp}")
 
   def start(self):
     self.attach()
