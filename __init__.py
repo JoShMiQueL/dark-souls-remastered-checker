@@ -11,6 +11,7 @@ class GameState:
   NOT_INGAME = "Not in game"
   UNKNOWN = "Unknown"
 
+
 class DarkSoulsRemastered:
   refresh_time_in_ms: int = 100
   rwm = ReadWriteMemory()
@@ -280,6 +281,7 @@ class DarkSoulsRemastered:
         self.base + offsets["deaths"][0], offsets["deaths"][1])
     return self.process.write(deaths_pointer, deaths)
 
+  # TODO: Search for the correct offset
   def get_equip_load(self) -> int:
     """
     Get the current equip load
@@ -289,6 +291,7 @@ class DarkSoulsRemastered:
     equip_load = self.process.read(equip_load_pointer)
     return equip_load
 
+  # TODO: Search for the correct offset
   def get_max_equip_load(self) -> int:
     """
     Get the max equip load
@@ -298,7 +301,6 @@ class DarkSoulsRemastered:
     max_equip_load = self.process.read(max_equip_load_pointer)
     return max_equip_load
 
-  #TODO: Search new offsets
   def get_equip_load_percentage(self) -> float:
     """
     Get the equip load percentage
@@ -631,7 +633,7 @@ class DarkSoulsRemastered:
       self.deaths = self.get_deaths()
       self.equip_load = self.get_equip_load()
       self.max_equip_load = self.get_max_equip_load()
-      self.equip_load_percentage = self.get_equip_load_percentage() #TODO: Search for the correct offset
+      self.equip_load_percentage = self.get_equip_load_percentage()
       self.next_level_req_souls = self.get_next_level_req_souls()
       self.vitality = self.get_vitality()
       self.attunement = self.get_attunement()
@@ -660,7 +662,7 @@ class DarkSoulsRemastered:
         print(f"Deaths: {self.deaths}")
         print(f"Equip Load: {self.equip_load}")
         print(f"Max Equip Load: {self.max_equip_load}")
-        print(f"Equip Load Percentage: {self.equip_load_percentage}%") #TODO: Search for the correct offset
+        print(f"Equip Load Percentage: {self.equip_load_percentage}%")
         print(f"Next Level Req Souls: {self.next_level_req_souls}")
         print(f"Vitality: {self.vitality}")
         print(f"Attunement: {self.attunement}")
