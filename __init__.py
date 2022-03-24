@@ -283,7 +283,6 @@ class DarkSoulsRemastered:
         self.base + offsets["deaths"][0], offsets["deaths"][1])
     return self.process.write(deaths_pointer, deaths)
 
-  # TODO: Search for the correct offset
   def get_equip_load(self) -> int:
     """
     Get the current equip load
@@ -293,7 +292,6 @@ class DarkSoulsRemastered:
     equip_load = self.process.read(equip_load_pointer)
     return equip_load
 
-  # TODO: Search for the correct offset
   def get_max_equip_load(self) -> int:
     """
     Get the max equip load
@@ -619,7 +617,7 @@ class DarkSoulsRemastered:
         self.base + offsets["l_weapon_2"][0], offsets["l_weapon_2"][1])
     l_weapon_2 = self.process.read(l_weapon_2_pointer)
     return l_weapon_2
-  
+
   def get_current_hp(self) -> int:
     """
     Get the current hp
@@ -628,7 +626,7 @@ class DarkSoulsRemastered:
         self.base + offsets["current_hp"][0], offsets["current_hp"][1])
     current_hp = self.process.read(current_hp_pointer)
     return current_hp
-  
+
   def get_max_hp(self) -> int:
     """
     Get the max hp
