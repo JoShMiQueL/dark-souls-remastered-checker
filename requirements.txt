@@ -1,2 +1,2 @@
-git+https://github.com/TomMars/ReadWriteMemory@patch-1#ReadWriteMemory
+Pymem==1.8.5
 autopep8==1.6.0
