@@ -695,8 +695,3 @@ class DarkSoulsRemastered:
       self.detach()
       print("\nExiting...")
       exit(1)
-
-
-
-# DarkSoulsRemastered().add_level(-1)
-DarkSoulsRemastered().loop()
