@@ -1,7 +1,8 @@
 from os import system
 from time import sleep
-from ReadWriteMemory import ReadWriteMemory, Process
+from pymem import Pymem
 from offsets import offsets
+from utils import get_pointer
 
 
 class GameState:
@@ -14,9 +15,8 @@ class GameState:
 
 class DarkSoulsRemastered:
   refresh_time_in_ms: int = 100
-  rwm = ReadWriteMemory()
+  m = Pymem()
   game_attached = False
-  process: Process
   base: int
 
   game_state: str = ""
@@ -54,9 +54,8 @@ class DarkSoulsRemastered:
     """
     if not self.game_attached:
       try:
-        self.process = self.rwm.get_process_by_name("DarkSoulsRemastered.exe")
-        self.process.open()
-        self.base = self.process.get_modules()[0]
+        self.m.open_process_from_name("DarkSoulsRemastered")
+        self.base = self.m.base_address
         self.game_attached = True
       except Exception as e:
         self.game_attached = False
@@ -66,7 +65,7 @@ class DarkSoulsRemastered:
     Detach from the game
     """
     if self.game_attached:
-      self.process.close()
+      self.m.close_process()
       self.game_attached = False
 
   def convert_time(self, time_in_ms: int) -> tuple[int, int, int, int]:
@@ -89,12 +88,12 @@ class DarkSoulsRemastered:
 
     :return: current game state
     """
-    is_ingame_pointer = self.process.get_pointer(
-        self.base + offsets["is_ingame"][0], offsets["is_ingame"][1])
-    is_ingame = self.process.read(is_ingame_pointer)
-    is_game_focused_pointer = self.process.get_pointer(
-        self.base + offsets["is_game_focused"][0], offsets["is_game_focused"][1])
-    is_game_focused = self.process.read(is_game_focused_pointer)
+    is_ingame_pointer = get_pointer(self.m,
+                                    self.base + offsets["is_ingame"][0], offsets["is_ingame"][1])
+    is_ingame = self.m.read_int(is_ingame_pointer)
+    is_game_focused_pointer = get_pointer(self.m,
+                                          self.base + offsets["is_game_focused"][0], offsets["is_game_focused"][1])
+    is_game_focused = self.m.read_int(is_game_focused_pointer)
     if is_ingame == 1 and is_game_focused == 1:
       return GameState.INGAME
     elif is_ingame == 1 and is_game_focused == 0:
@@ -113,18 +112,18 @@ class DarkSoulsRemastered:
 
     :return: tuple of hours, minutes, seconds, milliseconds
     """
-    time_played_pointer = self.process.get_pointer(
-        self.base + offsets["time_played"][0], offsets["time_played"][1])
-    time_played = self.process.read(time_played_pointer)
+    time_played_pointer = get_pointer(self.m,
+                                      self.base + offsets["time_played"][0], offsets["time_played"][1])
+    time_played = self.m.read_int(time_played_pointer)
     return self.convert_time(time_played)
 
   def get_souls(self) -> int:
     """
     Get the current amount of souls
     """
-    souls_pointer = self.process.get_pointer(
-        self.base + offsets["souls"][0], offsets["souls"][1])
-    souls = self.process.read(souls_pointer)
+    souls_pointer = get_pointer(self.m,
+                                self.base + offsets["souls"][0], offsets["souls"][1])
+    souls = self.m.read_int(souls_pointer)
     return souls
 
   def add_souls(self, souls: int) -> bool:
@@ -134,9 +133,9 @@ class DarkSoulsRemastered:
     :param souls: amount of souls to add
     :return: True if successful, False if not
     """
-    souls_pointer = self.process.get_pointer(
-        self.base + offsets["souls"][0], offsets["souls"][1])
-    _souls = self.process.read(souls_pointer)
+    souls_pointer = get_pointer(self.m,
+                                self.base + offsets["souls"][0], offsets["souls"][1])
+    _souls = self.m.read_int(souls_pointer)
     _souls += souls
     return self.process.write(souls_pointer, _souls)
 
@@ -147,17 +146,17 @@ class DarkSoulsRemastered:
     :param souls: amount of souls to set
     :return: True if successful, False if not
     """
-    souls_pointer = self.process.get_pointer(
-        self.base + offsets["souls"][0], offsets["souls"][1])
+    souls_pointer = get_pointer(self.m,
+                                self.base + offsets["souls"][0], offsets["souls"][1])
     return self.process.write(souls_pointer, souls)
 
   def get_estus(self) -> int:
     """
     Get the current amount of estus
     """
-    estus_pointer = self.process.get_pointer(
-        self.base + offsets["estus"][0], offsets["estus"][1])
-    estus = self.process.read(estus_pointer)
+    estus_pointer = get_pointer(self.m,
+                                self.base + offsets["estus"][0], offsets["estus"][1])
+    estus = self.m.read_int(estus_pointer)
     return estus
 
   def add_estus(self, estus: int) -> bool:
@@ -167,9 +166,9 @@ class DarkSoulsRemastered:
     :param estus: amount of estus to add
     :return: True if successful, False if not
     """
-    estus_pointer = self.process.get_pointer(
-        self.base + offsets["estus"][0], offsets["estus"][1])
-    _estus = self.process.read(estus_pointer)
+    estus_pointer = get_pointer(self.m,
+                                self.base + offsets["estus"][0], offsets["estus"][1])
+    _estus = self.m.read_int(estus_pointer)
     _estus += estus
     return self.process.write(estus_pointer, _estus)
 
@@ -180,17 +179,17 @@ class DarkSoulsRemastered:
     :param estus: amount of estus to set
     :return: True if successful, False if not
     """
-    estus_pointer = self.process.get_pointer(
-        self.base + offsets["estus"][0], offsets["estus"][1])
+    estus_pointer = get_pointer(self.m,
+                                self.base + offsets["estus"][0], offsets["estus"][1])
     return self.process.write(estus_pointer, estus)
 
   def get_humanities(self) -> int:
     """
     Get the current amount of humanities
     """
-    humanities_pointer = self.process.get_pointer(
-        self.base + offsets["humanities"][0], offsets["humanities"][1])
-    humanities = self.process.read(humanities_pointer)
+    humanities_pointer = get_pointer(self.m,
+                                     self.base + offsets["humanities"][0], offsets["humanities"][1])
+    humanities = self.m.read_int(humanities_pointer)
     return humanities
 
   def add_humanities(self, humanities: int) -> bool:
@@ -200,9 +199,9 @@ class DarkSoulsRemastered:
     :param humanities: amount of humanities to add
     :return: True if successful, False if not
     """
-    humanities_pointer = self.process.get_pointer(
-        self.base + offsets["humanities"][0], offsets["humanities"][1])
-    _humanities = self.process.read(humanities_pointer)
+    humanities_pointer = get_pointer(self.m,
+                                     self.base + offsets["humanities"][0], offsets["humanities"][1])
+    _humanities = self.m.read_int(humanities_pointer)
     _humanities += humanities
     return self.process.write(humanities_pointer, _humanities)
 
@@ -213,17 +212,17 @@ class DarkSoulsRemastered:
     :param humanities: amount of humanities to set
     :return: True if successful, False if not
     """
-    humanities_pointer = self.process.get_pointer(
-        self.base + offsets["humanities"][0], offsets["humanities"][1])
+    humanities_pointer = get_pointer(self.m,
+                                     self.base + offsets["humanities"][0], offsets["humanities"][1])
     return self.process.write(humanities_pointer, humanities)
 
   def get_level(self) -> int:
     """
     Get the current level
     """
-    level_pointer = self.process.get_pointer(
-        self.base + offsets["level"][0], offsets["level"][1])
-    level = self.process.read(level_pointer)
+    level_pointer = get_pointer(self.m,
+                                self.base + offsets["level"][0], offsets["level"][1])
+    level = self.m.read_int(level_pointer)
     return level
 
   def add_level(self, level: int) -> bool:
@@ -233,9 +232,9 @@ class DarkSoulsRemastered:
     :param level: amount of level to add
     :return: True if successful, False if not
     """
-    level_pointer = self.process.get_pointer(
-        self.base + offsets["level"][0], offsets["level"][1])
-    _level = self.process.read(level_pointer)
+    level_pointer = get_pointer(self.m,
+                                self.base + offsets["level"][0], offsets["level"][1])
+    _level = self.m.read_int(level_pointer)
     _level += level
     return self.process.write(level_pointer, _level)
 
@@ -246,17 +245,17 @@ class DarkSoulsRemastered:
     :param level: amount of level to set
     :return: True if successful, False if not
     """
-    level_pointer = self.process.get_pointer(
-        self.base + offsets["level"][0], offsets["level"][1])
+    level_pointer = get_pointer(self.m,
+                                self.base + offsets["level"][0], offsets["level"][1])
     return self.process.write(level_pointer, level)
 
   def get_deaths(self) -> int:
     """
     Get the current amount of deaths
     """
-    deaths_pointer = self.process.get_pointer(
-        self.base + offsets["deaths"][0], offsets["deaths"][1])
-    deaths = self.process.read(deaths_pointer)
+    deaths_pointer = get_pointer(self.m,
+                                 self.base + offsets["deaths"][0], offsets["deaths"][1])
+    deaths = self.m.read_int(deaths_pointer)
     return deaths
 
   def add_deaths(self, deaths: int) -> bool:
@@ -266,9 +265,9 @@ class DarkSoulsRemastered:
     :param deaths: amount of deaths to add
     :return: True if successful, False if not
     """
-    deaths_pointer = self.process.get_pointer(
-        self.base + offsets["deaths"][0], offsets["deaths"][1])
-    _deaths = self.process.read(deaths_pointer)
+    deaths_pointer = get_pointer(self.m,
+                                 self.base + offsets["deaths"][0], offsets["deaths"][1])
+    _deaths = self.m.read_int(deaths_pointer)
     _deaths += deaths
     return self.process.write(deaths_pointer, _deaths)
 
@@ -279,52 +278,52 @@ class DarkSoulsRemastered:
     :param deaths: amount of deaths to set
     :return: True if successful, False if not
     """
-    deaths_pointer = self.process.get_pointer(
-        self.base + offsets["deaths"][0], offsets["deaths"][1])
+    deaths_pointer = get_pointer(self.m,
+                                 self.base + offsets["deaths"][0], offsets["deaths"][1])
     return self.process.write(deaths_pointer, deaths)
 
-  def get_equip_load(self) -> int:
+  def get_equip_load(self) -> float:
     """
     Get the current equip load
     """
-    equip_load_pointer = self.process.get_pointer(
-        self.base + offsets["equip_load"][0], offsets["equip_load"][1])
-    equip_load = self.process.read(equip_load_pointer)
+    equip_load_pointer = get_pointer(self.m,
+                                     self.base + offsets["equip_load"][0], offsets["equip_load"][1])
+    equip_load = float(f"{self.m.read_float(equip_load_pointer):.2f}")
     return equip_load
 
-  def get_max_equip_load(self) -> int:
+  def get_max_equip_load(self) -> float:
     """
     Get the max equip load
     """
-    max_equip_load_pointer = self.process.get_pointer(
-        self.base + offsets["max_equip_load"][0], offsets["max_equip_load"][1])
-    max_equip_load = self.process.read(max_equip_load_pointer)
+    max_equip_load_pointer = get_pointer(self.m,
+                                         self.base + offsets["max_equip_load"][0], offsets["max_equip_load"][1])
+    max_equip_load = float(f"{self.m.read_float(max_equip_load_pointer):.2f}")
     return max_equip_load
 
-  def get_equip_load_percentage(self) -> float:
+  def get_equip_load_percentage(self) -> int:
     """
     Get the equip load percentage
     """
     equip_load = self.get_equip_load()
     max_equip_load = self.get_max_equip_load()
-    return equip_load / max_equip_load
+    return int(equip_load / max_equip_load * 100)
 
   def get_next_level_req_souls(self) -> int:
     """
     Get the next level req souls
     """
-    next_level_req_souls_pointer = self.process.get_pointer(
-        self.base + offsets["next_level_req_souls"][0], offsets["next_level_req_souls"][1])
-    next_level_req_souls = self.process.read(next_level_req_souls_pointer)
+    next_level_req_souls_pointer = get_pointer(self.m,
+                                               self.base + offsets["next_level_req_souls"][0], offsets["next_level_req_souls"][1])
+    next_level_req_souls = self.m.read_int(next_level_req_souls_pointer)
     return next_level_req_souls
 
   def get_vitality(self) -> int:
     """
     Get the current vitality
     """
-    vitality_pointer = self.process.get_pointer(
-        self.base + offsets["vitality"][0], offsets["vitality"][1])
-    vitality = self.process.read(vitality_pointer)
+    vitality_pointer = get_pointer(self.m,
+                                   self.base + offsets["vitality"][0], offsets["vitality"][1])
+    vitality = self.m.read_int(vitality_pointer)
     return vitality
 
   def add_vitality(self, vitality: int) -> bool:
@@ -334,9 +333,9 @@ class DarkSoulsRemastered:
     :param vitality: amount of vitality to add
     :return: True if successful, False if not
     """
-    vitality_pointer = self.process.get_pointer(
-        self.base + offsets["vitality"][0], offsets["vitality"][1])
-    _vitality = self.process.read(vitality_pointer)
+    vitality_pointer = get_pointer(self.m,
+                                   self.base + offsets["vitality"][0], offsets["vitality"][1])
+    _vitality = self.m.read_int(vitality_pointer)
     _vitality += vitality
     return self.process.write(vitality_pointer, _vitality)
 
@@ -347,17 +346,17 @@ class DarkSoulsRemastered:
     :param vitality: amount of vitality to set
     :return: True if successful, False if not
     """
-    vitality_pointer = self.process.get_pointer(
-        self.base + offsets["vitality"][0], offsets["vitality"][1])
+    vitality_pointer = get_pointer(self.m,
+                                   self.base + offsets["vitality"][0], offsets["vitality"][1])
     return self.process.write(vitality_pointer, vitality)
 
   def get_attunement(self) -> int:
     """
     Get the current attunement
     """
-    attunement_pointer = self.process.get_pointer(
-        self.base + offsets["attunement"][0], offsets["attunement"][1])
-    attunement = self.process.read(attunement_pointer)
+    attunement_pointer = get_pointer(self.m,
+                                     self.base + offsets["attunement"][0], offsets["attunement"][1])
+    attunement = self.m.read_int(attunement_pointer)
     return attunement
 
   def add_attunement(self, attunement: int) -> bool:
@@ -367,9 +366,9 @@ class DarkSoulsRemastered:
     :param attunement: amount of attunement to add
     :return: True if successful, False if not
     """
-    attunement_pointer = self.process.get_pointer(
-        self.base + offsets["attunement"][0], offsets["attunement"][1])
-    _attunement = self.process.read(attunement_pointer)
+    attunement_pointer = get_pointer(self.m,
+                                     self.base + offsets["attunement"][0], offsets["attunement"][1])
+    _attunement = self.m.read_int(attunement_pointer)
     _attunement += attunement
     return self.process.write(attunement_pointer, _attunement)
 
@@ -380,17 +379,17 @@ class DarkSoulsRemastered:
     :param attunement: amount of attunement to set
     :return: True if successful, False if not
     """
-    attunement_pointer = self.process.get_pointer(
-        self.base + offsets["attunement"][0], offsets["attunement"][1])
+    attunement_pointer = get_pointer(self.m,
+                                     self.base + offsets["attunement"][0], offsets["attunement"][1])
     return self.process.write(attunement_pointer, attunement)
 
   def get_endurance(self) -> int:
     """
     Get the current endurance
     """
-    endurance_pointer = self.process.get_pointer(
-        self.base + offsets["endurance"][0], offsets["endurance"][1])
-    endurance = self.process.read(endurance_pointer)
+    endurance_pointer = get_pointer(self.m,
+                                    self.base + offsets["endurance"][0], offsets["endurance"][1])
+    endurance = self.m.read_int(endurance_pointer)
     return endurance
 
   def add_endurance(self, endurance: int) -> bool:
@@ -400,9 +399,9 @@ class DarkSoulsRemastered:
     :param endurance: amount of endurance to add
     :return: True if successful, False if not
     """
-    endurance_pointer = self.process.get_pointer(
-        self.base + offsets["endurance"][0], offsets["endurance"][1])
-    _endurance = self.process.read(endurance_pointer)
+    endurance_pointer = get_pointer(self.m,
+                                    self.base + offsets["endurance"][0], offsets["endurance"][1])
+    _endurance = self.m.read_int(endurance_pointer)
     _endurance += endurance
     return self.process.write(endurance_pointer, _endurance)
 
@@ -413,17 +412,17 @@ class DarkSoulsRemastered:
     :param endurance: amount of endurance to set
     :return: True if successful, False if not
     """
-    endurance_pointer = self.process.get_pointer(
-        self.base + offsets["endurance"][0], offsets["endurance"][1])
+    endurance_pointer = get_pointer(self.m,
+                                    self.base + offsets["endurance"][0], offsets["endurance"][1])
     return self.process.write(endurance_pointer, endurance)
 
   def get_strength(self) -> int:
     """
     Get the current strength
     """
-    strength_pointer = self.process.get_pointer(
-        self.base + offsets["strength"][0], offsets["strength"][1])
-    strength = self.process.read(strength_pointer)
+    strength_pointer = get_pointer(self.m,
+                                   self.base + offsets["strength"][0], offsets["strength"][1])
+    strength = self.m.read_int(strength_pointer)
     return strength
 
   def add_strength(self, strength: int) -> bool:
@@ -433,9 +432,9 @@ class DarkSoulsRemastered:
     :param strength: amount of strength to add
     :return: True if successful, False if not
     """
-    strength_pointer = self.process.get_pointer(
-        self.base + offsets["strength"][0], offsets["strength"][1])
-    _strength = self.process.read(strength_pointer)
+    strength_pointer = get_pointer(self.m,
+                                   self.base + offsets["strength"][0], offsets["strength"][1])
+    _strength = self.m.read_int(strength_pointer)
     _strength += strength
     return self.process.write(strength_pointer, _strength)
 
@@ -446,17 +445,17 @@ class DarkSoulsRemastered:
     :param strength: amount of strength to set
     :return: True if successful, False if not
     """
-    strength_pointer = self.process.get_pointer(
-        self.base + offsets["strength"][0], offsets["strength"][1])
+    strength_pointer = get_pointer(self.m,
+                                   self.base + offsets["strength"][0], offsets["strength"][1])
     return self.process.write(strength_pointer, strength)
 
   def get_dexterity(self) -> int:
     """
     Get the current dexterity
     """
-    dexterity_pointer = self.process.get_pointer(
-        self.base + offsets["dexterity"][0], offsets["dexterity"][1])
-    dexterity = self.process.read(dexterity_pointer)
+    dexterity_pointer = get_pointer(self.m,
+                                    self.base + offsets["dexterity"][0], offsets["dexterity"][1])
+    dexterity = self.m.read_int(dexterity_pointer)
     return dexterity
 
   def add_dexterity(self, dexterity: int) -> bool:
@@ -466,9 +465,9 @@ class DarkSoulsRemastered:
     :param dexterity: amount of dexterity to add
     :return: True if successful, False if not
     """
-    dexterity_pointer = self.process.get_pointer(
-        self.base + offsets["dexterity"][0], offsets["dexterity"][1])
-    _dexterity = self.process.read(dexterity_pointer)
+    dexterity_pointer = get_pointer(self.m,
+                                    self.base + offsets["dexterity"][0], offsets["dexterity"][1])
+    _dexterity = self.m.read_int(dexterity_pointer)
     _dexterity += dexterity
     return self.process.write(dexterity_pointer, _dexterity)
 
@@ -479,17 +478,17 @@ class DarkSoulsRemastered:
     :param dexterity: amount of dexterity to set
     :return: True if successful, False if not
     """
-    dexterity_pointer = self.process.get_pointer(
-        self.base + offsets["dexterity"][0], offsets["dexterity"][1])
+    dexterity_pointer = get_pointer(self.m,
+                                    self.base + offsets["dexterity"][0], offsets["dexterity"][1])
     return self.process.write(dexterity_pointer, dexterity)
 
   def get_resistance(self) -> int:
     """
     Get the current resistance
     """
-    resistance_pointer = self.process.get_pointer(
-        self.base + offsets["resistance"][0], offsets["resistance"][1])
-    resistance = self.process.read(resistance_pointer)
+    resistance_pointer = get_pointer(self.m,
+                                     self.base + offsets["resistance"][0], offsets["resistance"][1])
+    resistance = self.m.read_int(resistance_pointer)
     return resistance
 
   def add_resistance(self, resistance: int) -> bool:
@@ -499,9 +498,9 @@ class DarkSoulsRemastered:
     :param resistance: amount of resistance to add
     :return: True if successful, False if not
     """
-    resistance_pointer = self.process.get_pointer(
-        self.base + offsets["resistance"][0], offsets["resistance"][1])
-    _resistance = self.process.read(resistance_pointer)
+    resistance_pointer = get_pointer(self.m,
+                                     self.base + offsets["resistance"][0], offsets["resistance"][1])
+    _resistance = self.m.read_int(resistance_pointer)
     _resistance += resistance
     return self.process.write(resistance_pointer, _resistance)
 
@@ -512,17 +511,17 @@ class DarkSoulsRemastered:
     :param resistance: amount of resistance to set
     :return: True if successful, False if not
     """
-    resistance_pointer = self.process.get_pointer(
-        self.base + offsets["resistance"][0], offsets["resistance"][1])
+    resistance_pointer = get_pointer(self.m,
+                                     self.base + offsets["resistance"][0], offsets["resistance"][1])
     return self.process.write(resistance_pointer, resistance)
 
   def get_intelligence(self) -> int:
     """
     Get the current intelligence
     """
-    intelligence_pointer = self.process.get_pointer(
-        self.base + offsets["intelligence"][0], offsets["intelligence"][1])
-    intelligence = self.process.read(intelligence_pointer)
+    intelligence_pointer = get_pointer(self.m,
+                                       self.base + offsets["intelligence"][0], offsets["intelligence"][1])
+    intelligence = self.m.read_int(intelligence_pointer)
     return intelligence
 
   def add_intelligence(self, intelligence: int) -> bool:
@@ -532,9 +531,9 @@ class DarkSoulsRemastered:
     :param intelligence: amount of intelligence to add
     :return: True if successful, False if not
     """
-    intelligence_pointer = self.process.get_pointer(
-        self.base + offsets["intelligence"][0], offsets["intelligence"][1])
-    _intelligence = self.process.read(intelligence_pointer)
+    intelligence_pointer = get_pointer(self.m,
+                                       self.base + offsets["intelligence"][0], offsets["intelligence"][1])
+    _intelligence = self.m.read_int(intelligence_pointer)
     _intelligence += intelligence
     return self.process.write(intelligence_pointer, _intelligence)
 
@@ -545,17 +544,17 @@ class DarkSoulsRemastered:
     :param intelligence: amount of intelligence to set
     :return: True if successful, False if not
     """
-    intelligence_pointer = self.process.get_pointer(
-        self.base + offsets["intelligence"][0], offsets["intelligence"][1])
+    intelligence_pointer = get_pointer(self.m,
+                                       self.base + offsets["intelligence"][0], offsets["intelligence"][1])
     return self.process.write(intelligence_pointer, intelligence)
 
   def get_faith(self) -> int:
     """
     Get the current faith
     """
-    faith_pointer = self.process.get_pointer(
-        self.base + offsets["faith"][0], offsets["faith"][1])
-    faith = self.process.read(faith_pointer)
+    faith_pointer = get_pointer(self.m,
+                                self.base + offsets["faith"][0], offsets["faith"][1])
+    faith = self.m.read_int(faith_pointer)
     return faith
 
   def add_faith(self, faith: int) -> bool:
@@ -565,9 +564,9 @@ class DarkSoulsRemastered:
     :param faith: amount of faith to add
     :return: True if successful, False if not
     """
-    faith_pointer = self.process.get_pointer(
-        self.base + offsets["faith"][0], offsets["faith"][1])
-    _faith = self.process.read(faith_pointer)
+    faith_pointer = get_pointer(self.m,
+                                self.base + offsets["faith"][0], offsets["faith"][1])
+    _faith = self.m.read_int(faith_pointer)
     _faith += faith
     return self.process.write(faith_pointer, _faith)
 
@@ -578,62 +577,62 @@ class DarkSoulsRemastered:
     :param faith: amount of faith to set
     :return: True if successful, False if not
     """
-    faith_pointer = self.process.get_pointer(
-        self.base + offsets["faith"][0], offsets["faith"][1])
+    faith_pointer = get_pointer(self.m,
+                                self.base + offsets["faith"][0], offsets["faith"][1])
     return self.process.write(faith_pointer, faith)
 
   def get_r_weapon_1(self) -> int:
     """
     Get the current right weapon 1
     """
-    r_weapon_1_pointer = self.process.get_pointer(
-        self.base + offsets["r_weapon_1"][0], offsets["r_weapon_1"][1])
-    r_weapon_1 = self.process.read(r_weapon_1_pointer)
+    r_weapon_1_pointer = get_pointer(self.m,
+                                     self.base + offsets["r_weapon_1"][0], offsets["r_weapon_1"][1])
+    r_weapon_1 = self.m.read_int(r_weapon_1_pointer)
     return r_weapon_1
 
   def get_r_weapon_2(self) -> int:
     """
     Get the current right weapon 2
     """
-    r_weapon_2_pointer = self.process.get_pointer(
-        self.base + offsets["r_weapon_2"][0], offsets["r_weapon_2"][1])
-    r_weapon_2 = self.process.read(r_weapon_2_pointer)
+    r_weapon_2_pointer = get_pointer(self.m,
+                                     self.base + offsets["r_weapon_2"][0], offsets["r_weapon_2"][1])
+    r_weapon_2 = self.m.read_int(r_weapon_2_pointer)
     return r_weapon_2
 
   def get_l_weapon_1(self) -> int:
     """
     Get the current left weapon 1
     """
-    l_weapon_1_pointer = self.process.get_pointer(
-        self.base + offsets["l_weapon_1"][0], offsets["l_weapon_1"][1])
-    l_weapon_1 = self.process.read(l_weapon_1_pointer)
+    l_weapon_1_pointer = get_pointer(self.m,
+                                     self.base + offsets["l_weapon_1"][0], offsets["l_weapon_1"][1])
+    l_weapon_1 = self.m.read_int(l_weapon_1_pointer)
     return l_weapon_1
 
   def get_l_weapon_2(self) -> int:
     """
     Get the current left weapon 2
     """
-    l_weapon_2_pointer = self.process.get_pointer(
-        self.base + offsets["l_weapon_2"][0], offsets["l_weapon_2"][1])
-    l_weapon_2 = self.process.read(l_weapon_2_pointer)
+    l_weapon_2_pointer = get_pointer(self.m,
+                                     self.base + offsets["l_weapon_2"][0], offsets["l_weapon_2"][1])
+    l_weapon_2 = self.m.read_int(l_weapon_2_pointer)
     return l_weapon_2
 
   def get_current_hp(self) -> int:
     """
     Get the current hp
     """
-    current_hp_pointer = self.process.get_pointer(
-        self.base + offsets["current_hp"][0], offsets["current_hp"][1])
-    current_hp = self.process.read(current_hp_pointer)
+    current_hp_pointer = get_pointer(self.m,
+                                     self.base + offsets["current_hp"][0], offsets["current_hp"][1])
+    current_hp = self.m.read_int(current_hp_pointer)
     return current_hp
 
   def get_max_hp(self) -> int:
     """
     Get the max hp
     """
-    max_hp_pointer = self.process.get_pointer(
-        self.base + offsets["max_hp"][0], offsets["max_hp"][1])
-    max_hp = self.process.read(max_hp_pointer)
+    max_hp_pointer = get_pointer(self.m,
+                                 self.base + offsets["max_hp"][0], offsets["max_hp"][1])
+    max_hp = self.m.read_int(max_hp_pointer)
     return max_hp
   # endregion
 
