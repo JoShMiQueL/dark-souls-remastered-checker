@@ -2,7 +2,7 @@ from os import system
 from time import sleep
 from pymem import Pymem
 from offsets import offsets
-from utils import get_pointer
+from utils import get_pointer, convert_time
 
 
 class GameState:
@@ -68,20 +68,6 @@ class DarkSoulsRemastered:
       self.m.close_process()
       self.game_attached = False
 
-  def convert_time(self, time_in_ms: int) -> tuple[int, int, int, int]:
-    """
-    Convert time in milliseconds to hours, minutes, seconds, milliseconds
-
-    :param time_in_ms: time in milliseconds
-    :return: tuple of hours, minutes, seconds, milliseconds
-    """
-    time_in_seconds: int = time_in_ms / 1000
-    hours: int = int(time_in_seconds / 3600)
-    minutes: int = int((time_in_seconds - (hours * 3600)) / 60)
-    seconds: int = int(time_in_seconds - (hours * 3600) - (minutes * 60))
-    milliseconds: int = time_in_ms
-    return hours, minutes, seconds, milliseconds
-
   def gameState(self):
     """
     Get the current game state
@@ -115,7 +101,7 @@ class DarkSoulsRemastered:
     time_played_pointer = get_pointer(self.m,
                                       self.base + offsets["time_played"][0], offsets["time_played"][1])
     time_played = self.m.read_int(time_played_pointer)
-    return self.convert_time(time_played)
+    return convert_time(time_played)
 
   def get_souls(self) -> int:
     """
