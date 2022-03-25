@@ -1,4 +1,4 @@
-offsets = {
+offsets: tuple[int, list[int]] = {
     "is_ingame": (0x1CF3CD0, [0x60]),  # int
     "is_game_focused": (0x1CF3CD0, [0x68]),  # int
     "character_name": (0x1D146E0, [0xDB8]),  # string
@@ -9,7 +9,7 @@ offsets = {
     "level": (0x1D146E0, [0xDA0]),  # int
     "deaths": (0x1D146E0, [0x98]),  # int
     "equip_load": (0x1D13240, [0x3BC]),  # int
-    "max_equip_load": (0x1D13240, [334]),  # int
+    "max_equip_load": (0x1D13240, [0x334]),  # int
     "next_level_req_souls": (0x1D13240, [0x3D4]),  # int
     "vitality": (0x1D146E0, [0xD50]),  # int
     "attunement": (0x1D146E0, [0xD58]),  # int
