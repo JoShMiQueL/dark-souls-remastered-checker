@@ -1,3 +1,4 @@
+from time import sleep
 from typing import List
 from pymem import Pymem
 
@@ -20,7 +21,7 @@ def get_pointer(pm: Pymem, base_address: hex, offsets: List[hex] = ()) -> int:
         _base_address = _base_address + offset
   return _base_address
 
-def convert_time(time_in_ms: int) -> tuple[int, int, int, int]:
+def convert_time(time_in_ms: int) -> tuple[int, int, int]:
   """
   Convert time in milliseconds to hours, minutes, seconds, milliseconds
 
@@ -31,5 +32,4 @@ def convert_time(time_in_ms: int) -> tuple[int, int, int, int]:
   hours: int = int(time_in_seconds / 3600)
   minutes: int = int((time_in_seconds - (hours * 3600)) / 60)
   seconds: int = int(time_in_seconds - (hours * 3600) - (minutes * 60))
-  milliseconds: int = time_in_ms
-  return hours, minutes, seconds, milliseconds
+  return hours, minutes, seconds
