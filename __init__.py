@@ -48,6 +48,9 @@ class DarkSoulsRemastered:
   l_weapon_2: int = 0
   current_hp: int = 0
   max_hp: int = 0
+  pos_x: float = 0.0
+  pos_y: float = 0.0
+  pos_z: float = 0.0
 
   def __init__(self):
     logger.setLevel(logging.INFO)
@@ -278,8 +281,8 @@ class DarkSoulsRemastered:
     """
     equip_load_pointer = get_pointer(self.m,
                                      self.base + offsets["equip_load"][0], offsets["equip_load"][1])
-    equip_load = float(f"{self.m.read_float(equip_load_pointer):.2f}")
-    return equip_load
+    equip_load = self.m.read_float(equip_load_pointer)
+    return float(f"{equip_load:.2f}")
 
   def get_max_equip_load(self) -> float:
     """
@@ -287,16 +290,16 @@ class DarkSoulsRemastered:
     """
     max_equip_load_pointer = get_pointer(self.m,
                                          self.base + offsets["max_equip_load"][0], offsets["max_equip_load"][1])
-    max_equip_load = float(f"{self.m.read_float(max_equip_load_pointer):.2f}")
-    return max_equip_load
+    max_equip_load = self.m.read_float(max_equip_load_pointer)
+    return float(f"{max_equip_load:.2f}")
 
-  def get_equip_load_percentage(self) -> int:
+  def get_equip_load_percentage(self) -> float:
     """
     Get the equip load percentage
     """
     equip_load = self.get_equip_load()
     max_equip_load = self.get_max_equip_load()
-    return int(equip_load / max_equip_load * 100)
+    return float(f"{equip_load / max_equip_load * 100:.2f}")
 
   def get_next_level_req_souls(self) -> int:
     """
@@ -624,6 +627,33 @@ class DarkSoulsRemastered:
                                  self.base + offsets["max_hp"][0], offsets["max_hp"][1])
     max_hp = self.m.read_int(max_hp_pointer)
     return max_hp
+
+  def get_pos_x(self) -> float:
+    """
+    Get the current x position
+    """
+    pos_x_pointer = get_pointer(self.m,
+                                self.base + offsets["pos_x"][0], offsets["pos_x"][1])
+    pos_x = self.m.read_float(pos_x_pointer)
+    return pos_x
+
+  def get_pos_y(self) -> float:
+    """
+    Get the current y position
+    """
+    pos_y_pointer = get_pointer(self.m,
+                                self.base + offsets["pos_y"][0], offsets["pos_y"][1])
+    pos_y = self.m.read_float(pos_y_pointer)
+    return pos_y
+
+  def get_pos_z(self) -> float:
+    """
+    Get the current z position
+    """
+    pos_z_pointer = get_pointer(self.m,
+                                self.base + offsets["pos_z"][0], offsets["pos_z"][1])
+    pos_z = self.m.read_float(pos_z_pointer)
+    return pos_z
   # endregion
 
   def _new_client(self, client, server: WebsocketServer):
@@ -669,7 +699,10 @@ class DarkSoulsRemastered:
                 "l_weapon_1": self.l_weapon_1,
                 "l_weapon_2": self.l_weapon_2,
                 "current_hp": self.current_hp,
-                "max_hp": self.max_hp
+                "max_hp": self.max_hp,
+                "pos_x": self.pos_x,
+                "pos_y": self.pos_y,
+                "pos_z": self.pos_z
             }
         }
       server.send_message(client, json.dumps(object))
@@ -708,6 +741,9 @@ class DarkSoulsRemastered:
       self.l_weapon_2 = self.get_l_weapon_2()
       self.current_hp = self.get_current_hp()
       self.max_hp = self.get_max_hp()
+      self.pos_x = self.get_pos_x()
+      self.pos_y = self.get_pos_y()
+      self.pos_z = self.get_pos_z()
 
   def print_memory(self):
     print(f"--- Game Attached: {self.game_attached} ---")
@@ -739,6 +775,9 @@ class DarkSoulsRemastered:
         print(f"Left Weapon 2: {self.l_weapon_2}")
         print(f"Current HP: {self.current_hp}")
         print(f"Max HP: {self.max_hp}")
+        print(f"Position X: {self.pos_x}")
+        print(f"Position Y: {self.pos_y}")
+        print(f"Position Z: {self.pos_z}")
 
   def start(self):
     self.attach()
