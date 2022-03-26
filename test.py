@@ -5,7 +5,7 @@ from offsets import offsets
 from utils import get_pointer
 
 # DarkSoulsRemastered().add_level(-1)
-DarkSoulsRemastered().start()
+DarkSoulsRemastered().loop()
 
 # pm = Pymem("DarkSoulsRemastered")
 # module = pm.base_address
