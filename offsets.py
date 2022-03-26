@@ -8,8 +8,8 @@ offsets: tuple[int, list[int]] = {
     "humanities": (0x1D146E0, [0xD94]),  # int
     "level": (0x1D146E0, [0xDA0]),  # int
     "deaths": (0x1D146E0, [0x98]),  # int
-    "equip_load": (0x1D13240, [0x3BC]),  # int
-    "max_equip_load": (0x1D13240, [0x334]),  # int
+    "equip_load": (0x1D13240, [0x3BC]),  # float
+    "max_equip_load": (0x1D13240, [0x334]),  # float
     "next_level_req_souls": (0x1D13240, [0x3D4]),  # int
     "vitality": (0x1D146E0, [0xD50]),  # int
     "attunement": (0x1D146E0, [0xD58]),  # int
@@ -25,4 +25,7 @@ offsets: tuple[int, list[int]] = {
     "l_weapon_2": (0x1D146E0, [0x10, 0x57C]),  # int
     "current_hp": (0x1D146E0, [0xD24]),  # int
     "max_hp": (0x1D146E0, [0xD2C]),  # int
+    "pos_x": (0x1CFDC48, [0xBE0]),  # float
+    "pos_y": (0x1CFDC48, [0xBE4]),  # float
+    "pos_z": (0x1CFDC48, [0xBE8]),  # float
 }
