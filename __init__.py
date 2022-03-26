@@ -1,23 +1,27 @@
+import logging
 from os import system
 from time import sleep
-from pymem import Pymem
+from pymem import Pymem, logger, exception, process
 from offsets import offsets
 from utils import get_pointer, convert_time
+from websocket_server import WebsocketServer
+import json
 
 
 class GameState:
   INGAME = "In game"
   INGAME_UNFOCUSED = "In game (unfocused)"
   MENU = "In menu"
-  NOT_INGAME = "Not in game"
   UNKNOWN = "Unknown"
 
 
 class DarkSoulsRemastered:
   refresh_time_in_ms: int = 100
   m = Pymem()
+  server: WebsocketServer
   game_attached = False
-  base: int
+  module = None
+  base: int = 0
 
   game_state: str = ""
   time_played: int = 0
@@ -26,9 +30,9 @@ class DarkSoulsRemastered:
   humanities: int = 0
   level: int = 0
   deaths: int = 0
-  equip_load: int = 0
-  max_equip_load: int = 0
-  equip_load_percentage: float = 0.0
+  equip_load: float = 0.0
+  max_equip_load: float = 0.0
+  equip_load_percentage: int = 0
   next_level_req_souls: int = 0
   vitality: int = 0
   attunement: int = 0
@@ -46,19 +50,21 @@ class DarkSoulsRemastered:
   max_hp: int = 0
 
   def __init__(self):
-    self.attach()
+    logger.setLevel(logging.INFO)
 
   def attach(self):
     """
     Attach to the game
     """
-    if not self.game_attached:
-      try:
-        self.m.open_process_from_name("DarkSoulsRemastered")
-        self.base = self.m.base_address
-        self.game_attached = True
-      except Exception as e:
-        self.game_attached = False
+    try:
+      self.m.open_process_from_name("DarkSoulsRemastered")
+      self.module = process.module_from_name(self.m.process_handle, "DarkSoulsRemastered.exe")
+      if not hasattr(self.module, "lpBaseOfDll"):
+        raise exception.ProcessNotFound("DarkSoulsRemastered.exe")
+      self.base = self.module.lpBaseOfDll
+      self.game_attached = True
+    except exception.ProcessNotFound as e:
+      self.game_attached = False
 
   def detach(self):
     """
@@ -84,8 +90,6 @@ class DarkSoulsRemastered:
       return GameState.INGAME
     elif is_ingame == 1 and is_game_focused == 0:
       return GameState.INGAME_UNFOCUSED
-    elif is_ingame == 0:
-      return GameState.NOT_INGAME
     elif is_ingame == 196608:
       return GameState.MENU
     else:
@@ -101,7 +105,7 @@ class DarkSoulsRemastered:
     time_played_pointer = get_pointer(self.m,
                                       self.base + offsets["time_played"][0], offsets["time_played"][1])
     time_played = self.m.read_int(time_played_pointer)
-    return convert_time(time_played)
+    return time_played
 
   def get_souls(self) -> int:
     """
@@ -622,11 +626,63 @@ class DarkSoulsRemastered:
     return max_hp
   # endregion
 
+  def _new_client(self, client, server: WebsocketServer):
+    while True:
+      object = {
+          "game_attached": self.game_attached,
+      }
+      if self.game_attached:
+        object = {
+            "game_attached": self.game_attached,
+            "game_state": self.game_state,
+        }
+      if self.game_attached and (self.game_state == GameState.INGAME or self.game_state == GameState.INGAME_UNFOCUSED):
+        object = {
+            "game_attached": self.game_attached,
+            "game_state": self.game_state,
+            "stats": {
+                "time_played": {
+                    "hours": convert_time(self.time_played)[0],
+                    "minutes": convert_time(self.time_played)[1],
+                    "seconds": convert_time(self.time_played)[2],
+                    "milliseconds": self.time_played,
+                },
+                "souls": self.souls,
+                "estus": self.estus,
+                "humanities": self.humanities,
+                "level": self.level,
+                "deaths": self.deaths,
+                "equip_load": self.equip_load,
+                "max_equip_load": self.max_equip_load,
+                "equip_load_percentage": self.equip_load_percentage,
+                "next_level_req_souls": self.next_level_req_souls,
+                "vitality": self.vitality,
+                "attunement": self.attunement,
+                "endurance": self.endurance,
+                "strength": self.strength,
+                "dexterity": self.dexterity,
+                "resistance": self.resistance,
+                "intelligence": self.intelligence,
+                "faith": self.faith,
+                "r_weapon_1": self.r_weapon_1,
+                "r_weapon_2": self.r_weapon_2,
+                "l_weapon_1": self.l_weapon_1,
+                "l_weapon_2": self.l_weapon_2,
+                "current_hp": self.current_hp,
+                "max_hp": self.max_hp
+            }
+        }
+      server.send_message(client, json.dumps(object))
+      sleep(self.refresh_time_in_ms / 1000)
+
   def read_memory(self):
     """
     Read the memory
     """
-    self.game_state = self.gameState()
+    try:
+      self.game_state = self.gameState()
+    except exception.MemoryReadError as e:
+      self.game_state = GameState.UNKNOWN
     if self.game_state == GameState.INGAME or self.game_state == GameState.INGAME_UNFOCUSED:
       self.time_played = self.get_time_played()
       self.souls = self.get_souls()
@@ -659,7 +715,7 @@ class DarkSoulsRemastered:
       print(f"Game state: {self.game_state}")
       if self.game_state == GameState.INGAME or self.game_state == GameState.INGAME_UNFOCUSED:
         print(
-            f"time_played: {self.time_played[3]}ms, {self.time_played[0]}h {self.time_played[1]}m {self.time_played[2]}s")
+            f"time_played: {self.time_played}ms, {convert_time(self.time_played)[0]}h {convert_time(self.time_played)[1]}m {convert_time(self.time_played)[2]}s")
         print(f"Souls: {self.souls}")
         print(f"Estus: {self.estus}")
         print(f"Humanities: {self.humanities}")
@@ -689,13 +745,15 @@ class DarkSoulsRemastered:
     if self.game_attached:
       self.read_memory()
     self.print_memory()
-    self.detach()
 
   def loop(self):
     """
     Start the main loop
     """
     try:
+      self.server = WebsocketServer(host="localhost", port=9001)
+      self.server.set_fn_new_client(self._new_client)
+      self.server.run_forever(threaded=True)
       while True:
         self.start()
         sleep(self.refresh_time_in_ms / 1000)
