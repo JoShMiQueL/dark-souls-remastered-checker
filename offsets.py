@@ -1,3 +1,4 @@
+# Updated offsets for App ver. 1.03 Regulation ver. 1.04
 offsets: tuple[int, list[int]] = {
     "current_hp": (0x1ACD758, [0x0, 0x3E8]),  # int
     "current_stamina": (0x1ACD758, [0x0, 0x3F8]),  # int
