@@ -51,6 +51,19 @@ class DarkSoulsRemastered:
   pos_z: float = 0.0
   current_stamina: int = 0
   max_stamina: int = 0
+  poise: int = 0
+  bleed_resist: int = 0
+  poison_resist: int = 0
+  curse_resist: int = 0
+  item_discovery: int = 0
+  attunement_slots: int = 0
+  physical_defense: int = 0
+  vs_strike: int = 0
+  vs_slash: int = 0
+  vs_thrust: int = 0
+  magical_defense: int = 0
+  flame_defense: int = 0
+  lightning_defense: int = 0
 
   def __init__(self):
     logger.setLevel(logging.INFO)
@@ -630,6 +643,123 @@ class DarkSoulsRemastered:
                                       self.base + offsets["max_stamina"][0], offsets["max_stamina"][1])
     max_stamina = self.m.read_int(max_stamina_pointer)
     return max_stamina
+
+  def get_attunement_slots(self) -> int:
+    """
+    Get the current attunement slots
+    """
+    attunement_slots_pointer = get_pointer(self.m,
+                                           self.base + offsets["attunement_slots"][0], offsets["attunement_slots"][1])
+    attunement_slots = self.m.read_int(attunement_slots_pointer)
+    return attunement_slots
+  
+  def get_poise(self) -> int:
+    """
+    Get the current poise
+    """
+    poise_pointer = get_pointer(self.m,
+                                self.base + offsets["poise"][0], offsets["poise"][1])
+    poise = self.m.read_int(poise_pointer)
+    return poise
+  
+  def get_bleed_resist(self) -> int:
+    """
+    Get the current bleed resist
+    """
+    bleed_resist_pointer = get_pointer(self.m,
+                                       self.base + offsets["bleed_resist"][0], offsets["bleed_resist"][1])
+    bleed_resist = self.m.read_int(bleed_resist_pointer)
+    return bleed_resist
+  
+  def get_poison_resist(self) -> int:
+    """
+    Get the current poison resist
+    """
+    poison_resist_pointer = get_pointer(self.m,
+                                        self.base + offsets["poison_resist"][0], offsets["poison_resist"][1])
+    poison_resist = self.m.read_int(poison_resist_pointer)
+    return poison_resist
+  
+  def get_curse_resist(self) -> int:
+    """
+    Get the current curse resist
+    """
+    curse_resist_pointer = get_pointer(self.m,
+                                       self.base + offsets["curse_resist"][0], offsets["curse_resist"][1])
+    curse_resist = self.m.read_int(curse_resist_pointer)
+    return curse_resist
+
+  def get_item_discovery(self) -> int:
+    """
+    Get the current item discovery
+    """
+    item_discovery_pointer = get_pointer(self.m,
+                                         self.base + offsets["item_discovery"][0], offsets["item_discovery"][1])
+    item_discovery = self.m.read_int(item_discovery_pointer)
+    return item_discovery
+  
+  def get_physical_defense(self) -> int:
+    """
+    Get the current physical defense
+    """
+    physical_defense_pointer = get_pointer(self.m,
+                                           self.base + offsets["physical_defense"][0], offsets["physical_defense"][1])
+    physical_defense = self.m.read_int(physical_defense_pointer)
+    return physical_defense
+
+  def get_vs_strike(self) -> int:
+    """
+    Get the current vs strike
+    """
+    vs_strike_pointer = get_pointer(self.m,
+                                    self.base + offsets["vs_strike"][0], offsets["vs_strike"][1])
+    vs_strike = self.m.read_int(vs_strike_pointer)
+    return vs_strike
+  
+  def get_vs_slash(self) -> int:
+    """
+    Get the current vs slash
+    """
+    vs_slash_pointer = get_pointer(self.m,
+                                   self.base + offsets["vs_slash"][0], offsets["vs_slash"][1])
+    vs_slash = self.m.read_int(vs_slash_pointer)
+    return vs_slash
+  
+  def get_vs_thrust(self) -> int:
+    """
+    Get the current vs thrust
+    """
+    vs_thrust_pointer = get_pointer(self.m,
+                                    self.base + offsets["vs_thrust"][0], offsets["vs_thrust"][1])
+    vs_thrust = self.m.read_int(vs_thrust_pointer)
+    return vs_thrust
+  
+  def get_magical_defense(self) -> int:
+    """
+    Get the current magical defense
+    """
+    magical_defense_pointer = get_pointer(self.m,
+                                          self.base + offsets["magical_defense"][0], offsets["magical_defense"][1])
+    magical_defense = self.m.read_int(magical_defense_pointer)
+    return magical_defense
+  
+  def get_flame_defense(self) -> int:
+    """
+    Get the current flame defense
+    """
+    flame_defense_pointer = get_pointer(self.m,
+                                        self.base + offsets["flame_defense"][0], offsets["flame_defense"][1])
+    flame_defense = self.m.read_int(flame_defense_pointer)
+    return flame_defense
+
+  def get_lightning_defense(self) -> int:
+    """
+    Get the current lightning defense
+    """
+    lightning_defense_pointer = get_pointer(self.m,
+                                            self.base + offsets["lightning_defense"][0], offsets["lightning_defense"][1])
+    lightning_defense = self.m.read_int(lightning_defense_pointer)
+    return lightning_defense
   # endregion
 
   def _new_client(self, client, server: WebsocketServer):
@@ -679,6 +809,19 @@ class DarkSoulsRemastered:
                 "pos_z": self.pos_z,
                 "current_stamina": self.current_stamina,
                 "max_stamina": self.max_stamina,
+                "poise": self.poise,
+                "bleed_resist": self.bleed_resist,
+                "poison_resist": self.poison_resist,
+                "curse_resist": self.curse_resist,
+                "item_discovery": self.item_discovery,
+                "attunement_slots": self.attunement_slots,
+                "physical_defense": self.physical_defense,
+                "vs_strike": self.vs_strike,
+                "vs_slash": self.vs_slash,
+                "vs_thrust": self.vs_thrust,
+                "magical_defense": self.magical_defense,
+                "flame_defense": self.flame_defense,
+                "lightning_defense": self.lightning_defense,
             }
         }
       server.send_message(client, json.dumps(object))
@@ -720,6 +863,19 @@ class DarkSoulsRemastered:
       self.pos_z = self.get_pos_z()
       self.current_stamina = self.get_current_stamina()
       self.max_stamina = self.get_max_stamina()
+      self.poise = self.get_poise()
+      self.bleed_resist = self.get_bleed_resist()
+      self.poison_resist = self.get_poison_resist()
+      self.curse_resist = self.get_curse_resist()
+      self.item_discovery = self.get_item_discovery()
+      self.attunement_slots = self.get_attunement_slots()
+      self.physical_defense = self.get_physical_defense()
+      self.vs_strike = self.get_vs_strike()
+      self.vs_slash = self.get_vs_slash()
+      self.vs_thrust = self.get_vs_thrust()
+      self.magical_defense = self.get_magical_defense()
+      self.flame_defense = self.get_flame_defense()
+      self.lightning_defense = self.get_lightning_defense()
 
   def print_memory(self):
     print(f"--- Game Attached: {self.game_attached} ---")
@@ -754,6 +910,19 @@ class DarkSoulsRemastered:
         print(f"Position Z: {self.pos_z}")
         print(f"Current Stamina: {self.current_stamina}")
         print(f"Max Stamina: {self.max_stamina}")
+        print(f"Poise: {self.poise}")
+        print(f"Bleed Resist: {self.bleed_resist}")
+        print(f"Poison Resist: {self.poison_resist}")
+        print(f"Curse Resist: {self.curse_resist}")
+        print(f"Item Discovery: {self.item_discovery}")
+        print(f"Attunement Slots: {self.attunement_slots}")
+        print(f"Physical Defense: {self.physical_defense}")
+        print(f"VS Strike: {self.vs_strike}")
+        print(f"VS Slash: {self.vs_slash}")
+        print(f"VS Thrust: {self.vs_thrust}")
+        print(f"Magical Defense: {self.magical_defense}")
+        print(f"Flame Defense: {self.flame_defense}")
+        print(f"Lightning Defense: {self.lightning_defense}")
 
   def start(self):
     self.attach()
