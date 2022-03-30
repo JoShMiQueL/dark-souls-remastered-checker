@@ -26,14 +26,12 @@ class DarkSoulsRemastered:
   game_state: str = ""
   time_played: int = 0
   souls: int = 0
-  estus: int = 0
   humanities: int = 0
   level: int = 0
   deaths: int = 0
   equip_load: float = 0.0
   max_equip_load: float = 0.0
   equip_load_percentage: int = 0
-  next_level_req_souls: int = 0
   vitality: int = 0
   attunement: int = 0
   endurance: int = 0
@@ -51,6 +49,8 @@ class DarkSoulsRemastered:
   pos_x: float = 0.0
   pos_y: float = 0.0
   pos_z: float = 0.0
+  current_stamina: int = 0
+  max_stamina: int = 0
 
   def __init__(self):
     logger.setLevel(logging.INFO)
@@ -142,39 +142,6 @@ class DarkSoulsRemastered:
     souls_pointer = get_pointer(self.m,
                                 self.base + offsets["souls"][0], offsets["souls"][1])
     return self.process.write(souls_pointer, souls)
-
-  def get_estus(self) -> int:
-    """
-    Get the current amount of estus
-    """
-    estus_pointer = get_pointer(self.m,
-                                self.base + offsets["estus"][0], offsets["estus"][1])
-    estus = self.m.read_int(estus_pointer)
-    return estus
-
-  def add_estus(self, estus: int) -> bool:
-    """
-    Add estus to the current amount of estus
-
-    :param estus: amount of estus to add
-    :return: True if successful, False if not
-    """
-    estus_pointer = get_pointer(self.m,
-                                self.base + offsets["estus"][0], offsets["estus"][1])
-    _estus = self.m.read_int(estus_pointer)
-    _estus += estus
-    return self.process.write(estus_pointer, _estus)
-
-  def set_estus(self, estus: int) -> bool:
-    """
-    Set the current amount of estus
-
-    :param estus: amount of estus to set
-    :return: True if successful, False if not
-    """
-    estus_pointer = get_pointer(self.m,
-                                self.base + offsets["estus"][0], offsets["estus"][1])
-    return self.process.write(estus_pointer, estus)
 
   def get_humanities(self) -> int:
     """
@@ -300,15 +267,6 @@ class DarkSoulsRemastered:
     equip_load = self.get_equip_load()
     max_equip_load = self.get_max_equip_load()
     return float(f"{equip_load / max_equip_load * 100:.2f}")
-
-  def get_next_level_req_souls(self) -> int:
-    """
-    Get the next level req souls
-    """
-    next_level_req_souls_pointer = get_pointer(self.m,
-                                               self.base + offsets["next_level_req_souls"][0], offsets["next_level_req_souls"][1])
-    next_level_req_souls = self.m.read_int(next_level_req_souls_pointer)
-    return next_level_req_souls
 
   def get_vitality(self) -> int:
     """
@@ -654,6 +612,24 @@ class DarkSoulsRemastered:
                                 self.base + offsets["pos_z"][0], offsets["pos_z"][1])
     pos_z = self.m.read_float(pos_z_pointer)
     return pos_z
+
+  def get_current_stamina(self) -> int:
+    """
+    Get the current stamina
+    """
+    current_stamina_pointer = get_pointer(self.m,
+                                          self.base + offsets["current_stamina"][0], offsets["current_stamina"][1])
+    current_stamina = self.m.read_int(current_stamina_pointer)
+    return current_stamina
+
+  def get_max_stamina(self) -> int:
+    """
+    Get the max stamina
+    """
+    max_stamina_pointer = get_pointer(self.m,
+                                      self.base + offsets["max_stamina"][0], offsets["max_stamina"][1])
+    max_stamina = self.m.read_int(max_stamina_pointer)
+    return max_stamina
   # endregion
 
   def _new_client(self, client, server: WebsocketServer):
@@ -678,14 +654,12 @@ class DarkSoulsRemastered:
                     "milliseconds": self.time_played,
                 },
                 "souls": self.souls,
-                "estus": self.estus,
                 "humanities": self.humanities,
                 "level": self.level,
                 "deaths": self.deaths,
                 "equip_load": self.equip_load,
                 "max_equip_load": self.max_equip_load,
                 "equip_load_percentage": self.equip_load_percentage,
-                "next_level_req_souls": self.next_level_req_souls,
                 "vitality": self.vitality,
                 "attunement": self.attunement,
                 "endurance": self.endurance,
@@ -702,7 +676,9 @@ class DarkSoulsRemastered:
                 "max_hp": self.max_hp,
                 "pos_x": self.pos_x,
                 "pos_y": self.pos_y,
-                "pos_z": self.pos_z
+                "pos_z": self.pos_z,
+                "current_stamina": self.current_stamina,
+                "max_stamina": self.max_stamina,
             }
         }
       server.send_message(client, json.dumps(object))
@@ -719,14 +695,12 @@ class DarkSoulsRemastered:
     if self.game_state == GameState.INGAME or self.game_state == GameState.INGAME_UNFOCUSED:
       self.time_played = self.get_time_played()
       self.souls = self.get_souls()
-      self.estus = self.get_estus()
       self.humanities = self.get_humanities()
       self.level = self.get_level()
       self.deaths = self.get_deaths()
       self.equip_load = self.get_equip_load()
       self.max_equip_load = self.get_max_equip_load()
       self.equip_load_percentage = self.get_equip_load_percentage()
-      self.next_level_req_souls = self.get_next_level_req_souls()
       self.vitality = self.get_vitality()
       self.attunement = self.get_attunement()
       self.endurance = self.get_endurance()
@@ -744,6 +718,8 @@ class DarkSoulsRemastered:
       self.pos_x = self.get_pos_x()
       self.pos_y = self.get_pos_y()
       self.pos_z = self.get_pos_z()
+      self.current_stamina = self.get_current_stamina()
+      self.max_stamina = self.get_max_stamina()
 
   def print_memory(self):
     print(f"--- Game Attached: {self.game_attached} ---")
@@ -753,14 +729,12 @@ class DarkSoulsRemastered:
         print(
             f"time_played: {self.time_played}ms, {convert_time(self.time_played)[0]}h {convert_time(self.time_played)[1]}m {convert_time(self.time_played)[2]}s")
         print(f"Souls: {self.souls}")
-        print(f"Estus: {self.estus}")
         print(f"Humanities: {self.humanities}")
         print(f"Level: {self.level}")
         print(f"Deaths: {self.deaths}")
         print(f"Equip Load: {self.equip_load}")
         print(f"Max Equip Load: {self.max_equip_load}")
         print(f"Equip Load Percentage: {self.equip_load_percentage}%")
-        print(f"Next Level Req Souls: {self.next_level_req_souls}")
         print(f"Vitality: {self.vitality}")
         print(f"Attunement: {self.attunement}")
         print(f"Endurance: {self.endurance}")
@@ -778,6 +752,8 @@ class DarkSoulsRemastered:
         print(f"Position X: {self.pos_x}")
         print(f"Position Y: {self.pos_y}")
         print(f"Position Z: {self.pos_z}")
+        print(f"Current Stamina: {self.current_stamina}")
+        print(f"Max Stamina: {self.max_stamina}")
 
   def start(self):
     self.attach()
